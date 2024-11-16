@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  pdf-to-cbz:
+    image: pdf-to-cbz
+    build:
+      context: .
+    volumes:
+      - /share/CACHEDEV3_DATA/takeaway/0convert_in:/takeaway/0convert_in
+      - /share/CACHEDEV3_DATA/takeaway/0convert_make:/takeaway/0convert_make
+      - /share/CACHEDEV3_DATA/takeaway/0convert_out:/takeaway/0convert_out
+    networks:
+      qnet-static:
+        ipv4_address: 192.168.1.110
+    ports:
+      - "2222:22" # Mappa la porta 22 del container alla porta 2222 dell'host
+    stdin_open: true
+    tty: true
+
+networks:
+  qnet-static:
+    external:
+      name: heimdall_qnet-static-eth25
+
