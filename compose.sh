@@ -14,7 +14,7 @@ OUTPUT_DIR="/takeaway/0convert_out"
 
 # Parametri di compressione
 COMPRESSION_LEVEL=75   # Livello di compressione JPEG (1-100)
-RESOLUTION=300         # Risoluzione in DPI per l'estrazione delle immagini (default: 300)
+RESOLUTION=150         # Risoluzione in DPI per l'estrazione delle immagini (default: 300)
 
 # Pulisci la cartella temporanea
 rm -rf "$TEMP_DIR"/*
@@ -104,14 +104,34 @@ find "$INPUT_DIR" -type f -name "*.pdf" | while read -r PDF_FILE; do
     # Calcola la differenza di dimensione
     SIZE_DIFF=$(echo "scale=2; ($PDF_SIZE - $CBZ_SIZE) / 1024 / 1024" | bc)
 
+    # Verifica se il file CBZ è valido e più piccolo del PDF originale
+    if [ $CBZ_SIZE -gt 0 ] && [ $CBZ_SIZE -lt $PDF_SIZE ]; then
+        echo "[INFO] Dimensione del file CBZ risultante: $CBZ_SIZE_MB MB"
+        echo "[INFO] Differenza di dimensione: $SIZE_DIFF MB"
+        echo "[INFO] Eliminando il file PDF originale..."
+        rm "$PDF_FILE"
+        if [ $? -eq 0 ]; then
+            echo "[OK] File PDF eliminato: $PDF_FILE"
+        else
+            echo "[ERRORE] Non è stato possibile eliminare il file PDF: $PDF_FILE"
+        fi
+    else
+        echo "[INFO] Il file CBZ non è più piccolo o non è valido. Il file PDF non sarà eliminato."
+    fi
+
     # Pulisci i file temporanei
     rm "$TEMP_DIR/$FILE_NAME"-*.jpg
 
-    # Messaggi di completamento
     echo "---------------------------------------------------"
     echo "[COMPLETATO] Conversione terminata per $FILE_NAME"
-    echo "[INFO] Dimensione del file PDF di partenza: $PDF_SIZE_MB MB"
-    echo "[INFO] Dimensione del file CBZ risultante: $CBZ_SIZE_MB MB"
-    echo "[INFO] Differenza di dimensione: $SIZE_DIFF MB"
     echo "==================================================="
 done
+
+# Eliminare sottocartelle vuote nella directory di input
+echo "[INFO] Rimuovendo sottocartelle vuote nella directory di input..."
+find "$INPUT_DIR" -type d -empty -delete
+if [ $? -eq 0 ]; then
+    echo "[OK] Sottocartelle vuote rimosse."
+else
+    echo "[ERRORE] Non è stato possibile rimuovere alcune sottocartelle vuote."
+fi
